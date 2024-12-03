@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, url_for
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 # Game state variables
 score = 0
@@ -14,18 +14,18 @@ def index():
 def game_state():
     global score, high_score
     data = request.get_json()
+    game_over = False
     
-    # Update game state based on data from the frontend
-    # Example: data might contain actions like 'collect_flower' or 'miss_flower'
     if data['action'] == 'collect_flower':
         score += 1
         if score > high_score:
             high_score = score
     elif data['action'] == 'miss_flower':
-        score -= 5
-
-    # Check for game over condition
-    game_over = score <= 0
+        score = max(0, score - 5)
+        if score == 0:  # Game over when score reaches 0
+            game_over = True
+    elif data['action'] == 'reset_score':
+        score = 0
 
     return jsonify({
         'score': score,

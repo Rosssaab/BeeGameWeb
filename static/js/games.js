@@ -13,8 +13,9 @@ $(document).ready(function() {
     const flowerImage = new Image();
     flowerImage.src = '/static/Flower.png';
 
-    // Load sound effect
+    // Load sound effects
     const gulpSound = new Audio('/static/sounds/gulp.mp3');
+    const dohSound = new Audio('/static/sounds/doh.wav');
 
     // Bee position and size
     let beeX = canvas.width / 2;
@@ -28,6 +29,8 @@ $(document).ready(function() {
     let flowerInterval = 2000;
     let flowersPerSpawn = 1;
     let flowerCreationInterval;
+    let gameOver = false;
+    let flashInterval;
 
     // Create new flowers
     function createFlowers() {
@@ -76,14 +79,139 @@ $(document).ready(function() {
         }, 1000);
     }
 
+    function showGameOver() {
+        gameOver = true;
+        gameStarted = false;
+        
+        // Clear all intervals
+        clearInterval(flowerCreationInterval);
+        clearAllDifficultyIntervals();  // New function to clear difficulty intervals
+        
+        // Show overlay with game over message
+        $('#overlay').show();
+        $('#start-button').hide();
+        $('#countdown').hide();
+        
+        if ($('#game-over-msg').length === 0) {
+            $('#overlay').append('<div id="game-over-msg">Game Over!</div>');
+        }
+        
+        let visible = true;
+        flashInterval = setInterval(() => {
+            $('#game-over-msg').css('visibility', visible ? 'visible' : 'hidden');
+            visible = !visible;
+        }, 500);
+
+        // Wait for click to restart
+        $(document).one('click', resetGame);
+    }
+
+    // Keep track of difficulty interval
+    let difficultyInterval;
+
     function startGame() {
         gameStarted = true;
+        gameOver = false;
         flowerCreationInterval = setInterval(createFlowers, flowerInterval);
-        setInterval(increaseDifficulty, 10000);
+        difficultyInterval = setInterval(increaseDifficulty, 10000);
         requestAnimationFrame(gameLoop);
     }
 
-    // Wait for images to load before starting the game
+    function clearAllDifficultyIntervals() {
+        clearInterval(difficultyInterval);
+        clearInterval(flowerCreationInterval);
+    }
+
+    function resetGame() {
+        // Clear all intervals
+        clearInterval(flashInterval);
+        clearAllDifficultyIntervals();
+        
+        // Reset game variables
+        gameOver = false;
+        gameStarted = false;
+        flowers = [];
+        flowerSpeed = 2;
+        flowerInterval = 2000;
+        flowersPerSpawn = 1;
+        beeX = canvas.width / 2;
+        beeY = canvas.height / 2;
+        
+        // Reset score
+        updateGameState('reset_score');
+        
+        // Reset display
+        $('#game-over-msg').remove();
+        $('#start-button').show();
+        $('#score').text('Score: 0');
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    }
+
+    function updateGameState(action) {
+        $.ajax({
+            url: '/game_state',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ action: action }),
+            success: function(response) {
+                $('#score').text('Score: ' + response.score);
+                $('#high-score').text('High Score: ' + response.high_score);
+                if (response.game_over && !gameOver) {
+                    showGameOver();
+                }
+            }
+        });
+    }
+
+    function gameLoop() {
+        if (!gameStarted || gameOver) {
+            return;  // Stop the game loop when game is over
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+        const bee = {
+            x: beeX,
+            y: beeY,
+            width: beeWidth,
+            height: beeHeight
+        };
+
+        flowers = flowers.filter(flower => {
+            flower.y += flowerSpeed;
+            
+            if (checkCollision(bee, flower)) {
+                gulpSound.currentTime = 0;
+                gulpSound.play();
+                updateGameState('collect_flower');
+                return false;
+            }
+            
+            if (flower.y >= canvas.height) {
+                dohSound.currentTime = 0;
+                dohSound.play();
+                updateGameState('miss_flower');
+                return false;
+            }
+            
+            ctx.drawImage(flowerImage, flower.x, flower.y, flower.width, flower.height);
+            return true;
+        });
+
+        ctx.drawImage(beeImage, beeX, beeY, beeWidth, beeHeight);
+        requestAnimationFrame(gameLoop);
+    }
+
+    $('#gameCanvas').mousemove(function(event) {
+        const rect = canvas.getBoundingClientRect();
+        beeX = event.clientX - rect.left - 25;
+        beeY = event.clientY - rect.top - 25;
+    });
+
     Promise.all([
         new Promise(resolve => backgroundImage.onload = resolve),
         new Promise(resolve => beeImage.onload = resolve),
@@ -94,70 +222,4 @@ $(document).ready(function() {
             startCountdown();
         });
     });
-
-    function gameLoop() {
-        if (!gameStarted) return;
-
-        // Clear the canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Draw background
-        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-
-        // Create bee object for collision detection
-        const bee = {
-            x: beeX,
-            y: beeY,
-            width: beeWidth,
-            height: beeHeight
-        };
-
-        // Update and draw flowers
-        flowers = flowers.filter(flower => {
-            flower.y += flowerSpeed;
-            
-            // Check for collision with bee
-            if (checkCollision(bee, flower)) {
-                gulpSound.currentTime = 0;
-                gulpSound.play();
-                updateGameState('collect_flower');
-                return false;
-            }
-            
-            // Draw the flower
-            ctx.drawImage(flowerImage, flower.x, flower.y, flower.width, flower.height);
-            
-            return flower.y < canvas.height;
-        });
-
-        // Draw bee
-        ctx.drawImage(beeImage, beeX, beeY, beeWidth, beeHeight);
-
-        // Request the next frame
-        requestAnimationFrame(gameLoop);
-    }
-
-    // Handle mouse movement
-    $('#gameCanvas').mousemove(function(event) {
-        const rect = canvas.getBoundingClientRect();
-        beeX = event.clientX - rect.left - 25;
-        beeY = event.clientY - rect.top - 25;
-    });
-
-    // Function to update game state
-    function updateGameState(action) {
-        $.ajax({
-            url: '/game_state',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ action: action }),
-            success: function(response) {
-                $('#score').text('Score: ' + response.score);
-                $('#high-score').text('High Score: ' + response.high_score);
-                if (response.game_over) {
-                    alert('Game Over!');
-                }
-            }
-        });
-    }
 });

@@ -47,4 +47,15 @@
 #score, #high-score {
     font-size: 24px;
     margin-top: 10px;
+}
+
+#game-over-msg {
+    font-size: 72px;
+    color: red;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 } 
