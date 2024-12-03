@@ -1,6 +1,7 @@
 $(document).ready(function() {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    let gameStarted = false;
 
     // Load game images
     const backgroundImage = new Image();
@@ -27,7 +28,6 @@ $(document).ready(function() {
     let flowerInterval = 2000;
     let flowersPerSpawn = 1;
     let flowerCreationInterval;
-    let gameStarted = false;
 
     // Create new flowers
     function createFlowers() {
@@ -59,6 +59,23 @@ $(document).ready(function() {
                bee.y + bee.height > flower.y;
     }
 
+    function startCountdown() {
+        let count = 5;
+        const countdownElement = $('#countdown');
+        countdownElement.show();
+        
+        const countInterval = setInterval(() => {
+            countdownElement.text(count);
+            count--;
+            
+            if (count < 0) {
+                clearInterval(countInterval);
+                $('#overlay').hide();
+                startGame();
+            }
+        }, 1000);
+    }
+
     function startGame() {
         gameStarted = true;
         flowerCreationInterval = setInterval(createFlowers, flowerInterval);
@@ -72,7 +89,10 @@ $(document).ready(function() {
         new Promise(resolve => beeImage.onload = resolve),
         new Promise(resolve => flowerImage.onload = resolve)
     ]).then(() => {
-        startGame();  // Start game immediately for now
+        $('#start-button').click(function() {
+            $(this).hide();
+            startCountdown();
+        });
     });
 
     function gameLoop() {
