@@ -1,16 +1,19 @@
-$(document).ready(function () {
+$(document).ready(function() {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
     // Load game images
     const backgroundImage = new Image();
-    backgroundImage.src = '/static/background.jpg';  // Adjust path if needed
+    backgroundImage.src = '/static/background.jpg';
 
     const beeImage = new Image();
-    beeImage.src = '/static/bee.png';  // Adjust path if needed
+    beeImage.src = '/static/bee.png';
 
     const flowerImage = new Image();
-    flowerImage.src = '/static/Flower.png';  // Adjust path if needed
+    flowerImage.src = '/static/Flower.png';
+
+    // Load sound effect
+    const gulpSound = new Audio('/static/sounds/gulp.mp3');
 
     // Bee position and size
     let beeX = canvas.width / 2;
@@ -18,21 +21,35 @@ $(document).ready(function () {
     const beeWidth = 50;
     const beeHeight = 50;
 
-    // Flowers array
+    // Flowers array and difficulty settings
     let flowers = [];
-    const flowerSpeed = 2;
-    
-    // Create new flower every 2 seconds
-    function createFlower() {
-        flowers.push({
-            x: Math.random() * (canvas.width - 40),  // Random x position
-            y: -40,  // Start above the canvas
-            width: 40,
-            height: 40
-        });
+    let flowerSpeed = 2;
+    let flowerInterval = 2000;
+    let flowersPerSpawn = 1;
+    let flowerCreationInterval;
+    let gameStarted = false;
+
+    // Create new flowers
+    function createFlowers() {
+        for (let i = 0; i < flowersPerSpawn; i++) {
+            flowers.push({
+                x: Math.random() * (canvas.width - 40),
+                y: -40 - (Math.random() * 100),
+                width: 40,
+                height: 40
+            });
+        }
     }
-    
-    setInterval(createFlower, 2000);  // Create new flower every 2 seconds
+
+    // Increase difficulty over time
+    function increaseDifficulty() {
+        flowerSpeed += 0.1;
+        flowerInterval = Math.max(500, flowerInterval - 100);
+        flowersPerSpawn = Math.min(5, flowersPerSpawn + 1);
+        
+        clearInterval(flowerCreationInterval);
+        flowerCreationInterval = setInterval(createFlowers, flowerInterval);
+    }
 
     // Collision detection function
     function checkCollision(bee, flower) {
@@ -42,18 +59,25 @@ $(document).ready(function () {
                bee.y + bee.height > flower.y;
     }
 
+    function startGame() {
+        gameStarted = true;
+        flowerCreationInterval = setInterval(createFlowers, flowerInterval);
+        setInterval(increaseDifficulty, 10000);
+        requestAnimationFrame(gameLoop);
+    }
+
     // Wait for images to load before starting the game
     Promise.all([
         new Promise(resolve => backgroundImage.onload = resolve),
         new Promise(resolve => beeImage.onload = resolve),
         new Promise(resolve => flowerImage.onload = resolve)
     ]).then(() => {
-        createFlower();  // Create first flower
-        requestAnimationFrame(gameLoop);
+        startGame();  // Start game immediately for now
     });
 
     function gameLoop() {
-        console.log('Game loop running');
+        if (!gameStarted) return;
+
         // Clear the canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -70,18 +94,19 @@ $(document).ready(function () {
 
         // Update and draw flowers
         flowers = flowers.filter(flower => {
-            flower.y += flowerSpeed;  // Make flower fall
+            flower.y += flowerSpeed;
             
             // Check for collision with bee
             if (checkCollision(bee, flower)) {
+                gulpSound.currentTime = 0;
+                gulpSound.play();
                 updateGameState('collect_flower');
-                return false; // Remove flower
+                return false;
             }
             
             // Draw the flower
             ctx.drawImage(flowerImage, flower.x, flower.y, flower.width, flower.height);
             
-            // Keep flower if it's still on screen and hasn't been collected
             return flower.y < canvas.height;
         });
 
@@ -95,20 +120,18 @@ $(document).ready(function () {
     // Handle mouse movement
     $('#gameCanvas').mousemove(function(event) {
         const rect = canvas.getBoundingClientRect();
-        beeX = event.clientX - rect.left - 25; // Center bee on mouse
-        beeY = event.clientY - rect.top - 25;  // Center bee on mouse
+        beeX = event.clientX - rect.left - 25;
+        beeY = event.clientY - rect.top - 25;
     });
 
-    let score = 0;
-    let highScore = 0;
-
+    // Function to update game state
     function updateGameState(action) {
         $.ajax({
             url: '/game_state',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ action: action }),
-            success: function (response) {
+            success: function(response) {
                 $('#score').text('Score: ' + response.score);
                 $('#high-score').text('High Score: ' + response.high_score);
                 if (response.game_over) {
