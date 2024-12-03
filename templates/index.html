@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bee Catching Flowers</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="1024" height="800"></canvas>
+        <div id="score">Score: 0</div>
+        <div id="high-score">High Score: 0</div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/games.js') }}"></script>
+</body>
+</html>
