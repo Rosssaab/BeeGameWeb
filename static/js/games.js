@@ -4,6 +4,12 @@ $(document).ready(function () {
     let gameStarted = false;
     let gameActive = true;
 
+    // Touch control variables
+    let touchActive = false;
+    let touchStartX = 0;
+    let touchCurrentX = 0;
+    const TOUCH_SENSITIVITY = 2;
+
     // Load game images
     const backgroundImage = new Image();
     backgroundImage.src = 'static/background.jpg';
@@ -74,9 +80,11 @@ $(document).ready(function () {
 
     // Add error handling for sound loading
     Object.values(sounds).forEach(sound => {
-        sound.onerror = (e) => {
-            console.error('Error loading sound:', e);
-        };
+        if (sound) {
+            sound.onerror = (e) => {
+                console.error('Error loading sound:', e);
+            };
+        }
     });
 
     // Add at the top with other game variables
@@ -120,12 +128,10 @@ $(document).ready(function () {
         let count = 3;
         const countdownElement = $('#countdown');
         
-        // Make sure overlay and countdown are visible
         $('#overlay').show();
         countdownElement.show();
         countdownElement.text('3');
         
-        // Play first beep if available
         if (sounds.beep) {
             sounds.beep.play().catch(error => console.log('Beep sound failed to play:', error));
         }
@@ -135,9 +141,8 @@ $(document).ready(function () {
             
             if (count > 0) {
                 countdownElement.text(count);
-                // Play beep for each number if available
                 if (sounds.beep) {
-                    sounds.beep.currentTime = 0; // Reset sound to start
+                    sounds.beep.currentTime = 0;
                     sounds.beep.play().catch(error => console.log('Beep sound failed to play:', error));
                 }
             }
@@ -146,8 +151,8 @@ $(document).ready(function () {
                 clearInterval(countInterval);
                 $('#overlay').hide();
                 countdownElement.hide();
-                resetGame();  // Make sure game is reset before starting
-                gameStarted = true;  // Explicitly set gameStarted
+                resetGame();
+                gameStarted = true;
                 startGame();
             }
         }, 1000);
@@ -158,16 +163,13 @@ $(document).ready(function () {
         gameStarted = false;
         gameActive = false;
 
-        // Clear all intervals
         clearInterval(flowerCreationInterval);
         clearAllDifficultyIntervals();
 
-        // Show overlay with game over message and current game's highest score
         $('#overlay').show();
         $('#start-button').hide();
         $('#countdown').hide();
 
-        // Create game over message with current game's highest score and smaller font
         if ($('#game-over-msg').length === 0) {
             $('#overlay').append(`
                 <div id="game-over-msg">
@@ -177,7 +179,6 @@ $(document).ready(function () {
             `);
         }
 
-        // Wait for click to restart
         $(document).one('click', resetGame);
 
         sounds.gameOver.play().catch(error => console.log('Game over sound failed to play:', error));
@@ -185,7 +186,6 @@ $(document).ready(function () {
         sounds.background.currentTime = 0;
     }
 
-    // Keep track of difficulty interval
     let difficultyInterval;
 
     function createBird() {
@@ -200,7 +200,6 @@ $(document).ready(function () {
             trackingSpeed: 3
         };
 
-        // Play looping police siren when bird appears
         sounds.police.currentTime = 0;
         sounds.police.play().catch(error => console.log('Police siren failed to play:', error));
     }
@@ -212,7 +211,6 @@ $(document).ready(function () {
         sounds.falling.play().catch(error => console.log('Falling sound failed to play:', error));
         beeStunned = true;
         
-        // Store initial position for animation
         const startY = beeY;
         const targetY = canvas.height - beeHeight;
         const fallDuration = 500;
@@ -222,18 +220,16 @@ $(document).ready(function () {
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / fallDuration, 1);
 
-            // Quadratic easing for more natural fall
             const easeProgress = progress * (2 - progress);
             beeY = startY + (targetY - startY) * easeProgress;
 
             if (progress < 1) {
                 requestAnimationFrame(animateFall);
             } else {
-                // Wait for 2 seconds before recovering
                 setTimeout(() => {
                     beeStunned = false;
-                    beeY = canvas.height / 2; // Reset bee to middle of screen
-                }, 2000); // Changed from 1000 to 2000 milliseconds
+                    beeY = canvas.height / 2;
+                }, 2000);
             }
         }
 
@@ -246,19 +242,15 @@ $(document).ready(function () {
         gameActive = true;
         beeStunned = false;
 
-        // Clear any existing intervals first
         clearAllDifficultyIntervals();
 
-        // Start all intervals fresh
         flowerCreationInterval = setInterval(createFlowers, flowerInterval);
         difficultyInterval = setInterval(increaseDifficulty, 10000);
 
-        // Create bird every 10-15 seconds
         birdInterval = setInterval(() => {
             createBird();
         }, Math.random() * 5000 + 10000);
 
-        // Start background music
         sounds.background.play().catch(error => console.log('Background audio failed to play:', error));
 
         requestAnimationFrame(gameLoop);
@@ -277,7 +269,6 @@ $(document).ready(function () {
         clearInterval(flashInterval);
         clearAllDifficultyIntervals();
 
-        // Reset game variables
         gameOver = false;
         gameStarted = false;
         gameActive = true;
@@ -290,7 +281,7 @@ $(document).ready(function () {
         beeX = canvas.width / 2;
         beeY = canvas.height / 2;
         currentScore = 0;
-        currentGameHighScore = 0;  // Reset current game high score
+        currentGameHighScore = 0;
 
         updateGameState('reset_score');
 
@@ -301,10 +292,11 @@ $(document).ready(function () {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-        // Reset all audio
         Object.values(sounds).forEach(sound => {
-            sound.pause();
-            sound.currentTime = 0;
+            if (sound) {
+                sound.pause();
+                sound.currentTime = 0;
+            }
         });
     }
 
@@ -316,7 +308,6 @@ $(document).ready(function () {
             data: JSON.stringify({ action: action }),
             success: function (response) {
                 currentScore = response.score;
-                // Update current game high score if current score is higher
                 currentGameHighScore = Math.max(currentGameHighScore, currentScore);
                 $('#score').text('Score: ' + currentScore);
                 $('#high-score').text('High Score: ' + response.high_score);
@@ -342,7 +333,6 @@ $(document).ready(function () {
             height: beeHeight
         };
 
-        // Update and draw flowers (always active)
         flowers = flowers.filter(flower => {
             flower.y += flowerSpeed;
 
@@ -362,7 +352,6 @@ $(document).ready(function () {
             return true;
         });
 
-        // Only process bird if bee isn't stunned
         if (!beeStunned && bird) {
             bird.y += bird.speed;
 
@@ -375,13 +364,13 @@ $(document).ready(function () {
             if (checkCollision(bee, bird)) {
                 stunBee();
                 bird = null;
-                sounds.police.pause();  // Stop police siren when bird is gone
+                sounds.police.pause();
                 sounds.police.currentTime = 0;
             }
 
             if (bird && bird.y > canvas.height) {
                 bird = null;
-                sounds.police.pause();  // Stop police siren when bird is gone
+                sounds.police.pause();
                 sounds.police.currentTime = 0;
             }
 
@@ -390,10 +379,37 @@ $(document).ready(function () {
             }
         }
 
-        // Always draw the bee
         ctx.drawImage(beeImage, beeX, beeY, beeWidth, beeHeight);
 
         requestAnimationFrame(gameLoop);
+    }
+
+    // Setup touch controls
+    function setupTouchControls() {
+        const touchArea = document.getElementById('touch-controls');
+        
+        touchArea.addEventListener('touchstart', function(e) {
+            touchActive = true;
+            touchStartX = e.touches[0].clientX;
+            touchCurrentX = touchStartX;
+            e.preventDefault();
+        }, { passive: false });
+
+        touchArea.addEventListener('touchmove', function(e) {
+            if (!touchActive || beeStunned) return;
+            touchCurrentX = e.touches[0].clientX;
+            const deltaX = (touchCurrentX - touchStartX) * TOUCH_SENSITIVITY;
+            
+            // Move bee based on touch movement
+            beeX = Math.max(0, Math.min(canvas.width - beeWidth, 
+                canvas.width / 2 + deltaX));
+                
+            e.preventDefault();
+        }, { passive: false });
+
+        touchArea.addEventListener('touchend', function() {
+            touchActive = false;
+        });
     }
 
     // Handle mouse movement only when bee isn't stunned
@@ -408,7 +424,6 @@ $(document).ready(function () {
     Promise.all([
         new Promise(resolve => {
             backgroundImage.onload = resolve;
-            // Add error handling
             backgroundImage.onerror = () => console.error('Failed to load background image');
         }),
         new Promise(resolve => {
@@ -424,19 +439,20 @@ $(document).ready(function () {
             birdImage.onerror = () => console.error('Failed to load bird image');
         })
     ]).then(() => {
-        // Draw initial background
         ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
         
-        // Show start button and ensure overlay is visible
         $('#overlay').show();
         $('#start-button').show();
         
-        // Add click handler for start button
         $('#start-button').off('click').on('click', function() {
-            console.log('Start button clicked'); // Debug log
+            console.log('Start button clicked');
             $(this).hide();
             startCountdown();
         });
+
+        // Initialize touch controls
+        setupTouchControls();
+        
     }).catch(error => {
         console.error('Error loading game assets:', error);
     });

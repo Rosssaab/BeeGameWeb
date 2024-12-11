@@ -3,6 +3,7 @@
     margin: 0 auto;
     text-align: center;
     position: relative;
+    padding-bottom: 120px;
 }
 
 #overlay {
@@ -58,4 +59,57 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+/* Add touch control styles */
+#touch-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: rgba(0,0,0,0.2);
+    border-top: 4px solid #ffd700;
+    border-left: 4px solid #ffd700;
+    border-right: 4px solid #ffd700;
+    box-shadow: 0 -2px 10px rgba(255, 215, 0, 0.3);
+    z-index: 1000;
+}
+
+/* Add visual feedback for touch area */
+#touch-controls::after {
+    content: '← Slide to Move →';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 1.2em;
+    opacity: 0.7;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Make game container responsive */
+#game-container {
+    position: relative;
+    width: 100%;
+    max-width: 1024px;
+    margin: 0 auto;
+    padding-bottom: 120px;
+}
+
+/* Responsive canvas */
+#gameCanvas {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Hide touch controls on desktop */
+@media (min-width: 768px) {
+    #touch-controls {
+        display: none;
+    }
+    #game-container {
+        padding-bottom: 0;
+    }
 } 
