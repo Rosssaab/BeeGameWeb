@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bee Catching Flowers</title>
+    <link rel="stylesheet" href="/BeeGame/static/css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Ross's Bee Game</h1>
+        <p>Eat the flowers. Avoid the spiders!</p>
+    </div>
+    <div id="game-container">
+        <div id="overlay">
+            <button id="start-button">Start Game</button>
+            <div id="countdown" style="display: none;">5</div>
+        </div>
+        <canvas id="gameCanvas" width="1024" height="800"></canvas>
+        <div id="score">Score: 0</div>
+        <div id="high-score">High Score: {{ high_score }}</div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/BeeGame/static/js/games.js"></script>
+</body>
+</html>
