@@ -4,23 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bee Catching Flowers</title>
+    <!-- Add Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/BeeGame/static/css/style.css">
 </head>
 <body>
-    <div class="header">
-        <h1>Ross's Bee Game</h1>
-        <p>Eat the flowers. Avoid the spiders!</p>
-    </div>
-    <div id="game-container">
-        <div id="overlay">
-            <button id="start-button">Start Game</button>
-            <div id="countdown" style="display: none;">5</div>
+    <!-- Add Bootstrap navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a href="/" class="btn btn-outline-light me-3">Back to My Web Stuff</a>
+            
+            <a class="navbar-brand mx-auto fs-2" href="#">🐝 Ross's Bee Game</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="nav-link" id="high-score">High Score: {{ high_score }}</span>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <canvas id="gameCanvas" width="1024" height="800"></canvas>
-        <div id="score">Score: 0</div>
-        <div id="high-score">High Score: {{ high_score }}</div>
+    </nav>
+
+    <div class="container">
+        <div class="header text-center mb-4">
+            <p class="lead">Eat the flowers. Avoid the spiders!</p>
+        </div>
+        <div id="game-container" class="text-center">
+            <div id="overlay">
+                <button id="start-button" class="btn btn-primary btn-lg">Start Game</button>
+                <div id="countdown" class="display-1" style="display: none;">5</div>
+            </div>
+            <canvas id="gameCanvas" width="1024" height="800"></canvas>
+            <div id="score" class="h3 mt-3">Score: 0</div>
+        </div>
     </div>
+
+    <!-- Add Bootstrap JS and its dependencies -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/BeeGame/static/js/games.js"></script>
 </body>
 </html>
