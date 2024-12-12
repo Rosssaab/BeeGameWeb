@@ -8,7 +8,7 @@ $(document).ready(function () {
     let touchActive = false;
     let touchStartX = 0;
     let touchCurrentX = 0;
-    const TOUCH_SENSITIVITY = 2;
+    const TOUCH_SENSITIVITY = 1.5;
 
     // Load game images
     const backgroundImage = new Image();
@@ -397,17 +397,29 @@ $(document).ready(function () {
 
         touchArea.addEventListener('touchmove', function(e) {
             if (!touchActive || beeStunned) return;
+            
             touchCurrentX = e.touches[0].clientX;
-            const deltaX = (touchCurrentX - touchStartX) * TOUCH_SENSITIVITY;
+            const deltaX = (touchCurrentX - touchStartX);
             
             // Move bee based on touch movement
-            beeX = Math.max(0, Math.min(canvas.width - beeWidth, 
-                canvas.width / 2 + deltaX));
+            const newX = Math.max(0, Math.min(canvas.width - beeWidth, 
+                beeX + (deltaX * TOUCH_SENSITIVITY)));
                 
+            // Only update if position actually changed
+            if (newX !== beeX) {
+                beeX = newX;
+                touchStartX = touchCurrentX; // Update start position for smoother control
+            }
+            
             e.preventDefault();
         }, { passive: false });
 
         touchArea.addEventListener('touchend', function() {
+            touchActive = false;
+        });
+
+        // Add touch cancel handler
+        touchArea.addEventListener('touchcancel', function() {
             touchActive = false;
         });
     }
