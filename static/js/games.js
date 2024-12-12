@@ -194,10 +194,10 @@ $(document).ready(function () {
         if (!gameStarted || gameOver) return;
 
         bird = {
-            x: Math.random() * (canvas.width - 40),
-            y: -40,
-            width: 40,
-            height: 40,
+            x: Math.random() * (canvas.width - 65),
+            y: -65,
+            width: 65,
+            height: 65,
             speed: BIRD_SPEED,
             trackingSpeed: 3
         };
@@ -357,6 +357,9 @@ $(document).ready(function () {
         if (!beeStunned && bird) {
             bird.y += bird.speed;
 
+            // Store previous X position to determine direction
+            const previousX = bird.x;
+
             if (bird.x < beeX) {
                 bird.x += bird.trackingSpeed;
             } else if (bird.x > beeX) {
@@ -377,7 +380,19 @@ $(document).ready(function () {
             }
 
             if (bird) {
-                ctx.drawImage(birdImage, bird.x, bird.y, bird.width, bird.height);
+                // Save the current context state
+                ctx.save();
+                
+                // If moving right, flip the image
+                if (bird.x > previousX) {
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(birdImage, -bird.x - bird.width, bird.y, bird.width, bird.height);
+                } else {
+                    ctx.drawImage(birdImage, bird.x, bird.y, bird.width, bird.height);
+                }
+                
+                // Restore the context state
+                ctx.restore();
             }
         }
 
