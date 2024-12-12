@@ -7,7 +7,9 @@ $(document).ready(function () {
     // Touch control variables
     let touchActive = false;
     let touchStartX = 0;
+    let touchStartY = 0;
     let touchCurrentX = 0;
+    let touchCurrentY = 0;
     const TOUCH_SENSITIVITY = 1.5;
 
     // Load game images
@@ -391,7 +393,9 @@ $(document).ready(function () {
         touchArea.addEventListener('touchstart', function(e) {
             touchActive = true;
             touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
             touchCurrentX = touchStartX;
+            touchCurrentY = touchStartY;
             e.preventDefault();
         }, { passive: false });
 
@@ -399,16 +403,24 @@ $(document).ready(function () {
             if (!touchActive || beeStunned) return;
             
             touchCurrentX = e.touches[0].clientX;
+            touchCurrentY = e.touches[0].clientY;
+            
+            // Calculate deltas for both X and Y
             const deltaX = (touchCurrentX - touchStartX);
+            const deltaY = (touchCurrentY - touchStartY);
             
             // Move bee based on touch movement
             const newX = Math.max(0, Math.min(canvas.width - beeWidth, 
                 beeX + (deltaX * TOUCH_SENSITIVITY)));
+            const newY = Math.max(0, Math.min(canvas.height - beeHeight, 
+                beeY + (deltaY * TOUCH_SENSITIVITY)));
                 
-            // Only update if position actually changed
-            if (newX !== beeX) {
+            // Update positions if they changed
+            if (newX !== beeX || newY !== beeY) {
                 beeX = newX;
-                touchStartX = touchCurrentX; // Update start position for smoother control
+                beeY = newY;
+                touchStartX = touchCurrentX;
+                touchStartY = touchCurrentY;
             }
             
             e.preventDefault();
@@ -418,7 +430,6 @@ $(document).ready(function () {
             touchActive = false;
         });
 
-        // Add touch cancel handler
         touchArea.addEventListener('touchcancel', function() {
             touchActive = false;
         });
