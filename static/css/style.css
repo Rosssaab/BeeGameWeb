@@ -69,6 +69,7 @@
     height: 200px;
     background: rgba(0, 0, 0, 0.4);
     border-top: 8px solid #ffd700;
+    border-bottom: 8px solid #ffd700;
     border-left: 8px solid #ffd700;
     border-right: 8px solid #ffd700;
     z-index: 1000;
